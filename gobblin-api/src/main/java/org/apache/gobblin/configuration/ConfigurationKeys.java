@@ -872,4 +872,12 @@ public class ConfigurationKeys {
   public static final String GIT_CONFIG_MONITOR_BRANCH_NAME = GIT_CONFIG_MONITOR_PREFIX + "branchName";
   public static final String DEFAULT_GIT_CONFIG_MONITOR_BRANCH_NAME = "master";
   public static final int DEFAULT_GIT_CONFIG_MONITOR_POLLING_INTERVAL = 60;
+
+  /**
+   * Configuration related to PG StatsClient
+   */
+  public static final String METRICS_HOST = "metrics.host";
+  public static final String METRICS_PORT = "metrics.port";
+  public static String METRICS_ENABLED = "metrics.enabled";
+
 }
