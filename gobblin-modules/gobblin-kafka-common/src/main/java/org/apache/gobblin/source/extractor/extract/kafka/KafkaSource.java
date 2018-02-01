@@ -162,7 +162,7 @@ public abstract class KafkaSource<S, D> extends EventBasedSource<S, D> {
   }
 
   @Override
-  public List<WorkUnit> getWorkunits(SourceState state) {
+  public List<WorkUnit> getWorkunits(SourceState state) throws IOException{
     this.metricContext = Instrumented.getMetricContext(state, KafkaSource.class);
     this.lineageInfo = LineageInfo.getLineageInfo(state.getBroker());
 
@@ -570,7 +570,7 @@ public abstract class KafkaSource<S, D> extends EventBasedSource<S, D> {
    * If config store is enabled, then intersection of topics from blacklisting/whitelisting will be taken against
    * the topics from config-store
    */
-  private List<KafkaTopic> getFilteredTopics(SourceState state) {
+  private List<KafkaTopic> getFilteredTopics(SourceState state) throws IOException{
     List<Pattern> blacklist = DatasetFilterUtils.getPatternList(state, TOPIC_BLACKLIST);
     List<Pattern> whitelist = DatasetFilterUtils.getPatternList(state, TOPIC_WHITELIST);
     List<KafkaTopic> topics = this.kafkaConsumerClient.get().getFilteredTopics(blacklist, whitelist);

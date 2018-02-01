@@ -150,6 +150,10 @@ public abstract class KafkaExtractor<S, D> extends EventBasedExtractor<S, D> {
       if (this.messageIterator == null || !this.messageIterator.hasNext()) {
         try {
           this.messageIterator = fetchNextMessageBuffer();
+        } catch (IOException ie){
+          LOG.error(String.format("Failed to fetch next message buffer for partition %s. Will skip this partition.",
+            getCurrentPartition()), ie);
+          throw ie;
         } catch (Exception e) {
           LOG.error(String.format("Failed to fetch next message buffer for partition %s. Will skip this partition.",
               getCurrentPartition()), e);
@@ -272,7 +276,7 @@ public abstract class KafkaExtractor<S, D> extends EventBasedExtractor<S, D> {
     switchMetricContext(Lists.<Tag<?>> newArrayList(new Tag<>("kafka_partition", currentPartitionId)));
   }
 
-  private Iterator<KafkaConsumerRecord> fetchNextMessageBuffer() {
+  private Iterator<KafkaConsumerRecord> fetchNextMessageBuffer()  throws IOException{
     return this.kafkaConsumerClient.consume(this.partitions.get(this.currentPartitionIdx),
         this.nextWatermark.get(this.currentPartitionIdx), this.highWatermark.get(this.currentPartitionIdx));
   }

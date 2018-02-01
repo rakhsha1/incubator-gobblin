@@ -141,7 +141,7 @@ public class KafkaWrapper implements Closeable {
     return this.brokers;
   }
 
-  public List<KafkaTopic> getFilteredTopics(List<Pattern> blacklist, List<Pattern> whitelist) {
+  public List<KafkaTopic> getFilteredTopics(List<Pattern> blacklist, List<Pattern> whitelist) throws IOException{
     return this.kafkaAPI.getFilteredTopics(blacklist, whitelist);
   }
 
@@ -153,7 +153,7 @@ public class KafkaWrapper implements Closeable {
     return this.kafkaAPI.getLatestOffset(partition);
   }
 
-  public Iterator<MessageAndOffset> fetchNextMessageBuffer(KafkaPartition partition, long nextOffset, long maxOffset) {
+  public Iterator<MessageAndOffset> fetchNextMessageBuffer(KafkaPartition partition, long nextOffset, long maxOffset) throws IOException{
     return this.kafkaAPI.fetchNextMessageBuffer(partition, nextOffset, maxOffset);
   }
 
@@ -178,14 +178,14 @@ public class KafkaWrapper implements Closeable {
     protected KafkaAPI(Config config) {
     }
 
-    protected abstract List<KafkaTopic> getFilteredTopics(List<Pattern> blacklist, List<Pattern> whitelist);
+    protected abstract List<KafkaTopic> getFilteredTopics(List<Pattern> blacklist, List<Pattern> whitelist) throws IOException;
 
     protected abstract long getEarliestOffset(KafkaPartition partition) throws KafkaOffsetRetrievalFailureException;
 
     protected abstract long getLatestOffset(KafkaPartition partition) throws KafkaOffsetRetrievalFailureException;
 
     protected abstract Iterator<MessageAndOffset> fetchNextMessageBuffer(KafkaPartition partition, long nextOffset,
-        long maxOffset);
+        long maxOffset) throws IOException;
   }
 
   /**
@@ -246,7 +246,7 @@ public class KafkaWrapper implements Closeable {
     }
 
     @Override
-    public List<KafkaTopic> getFilteredTopics(List<Pattern> blacklist, List<Pattern> whitelist) {
+    public List<KafkaTopic> getFilteredTopics(List<Pattern> blacklist, List<Pattern> whitelist) throws IOException{
       List<TopicMetadata> topicMetadataList = getFilteredMetadataList(blacklist, whitelist);
 
       List<KafkaTopic> filteredTopics = Lists.newArrayList();
@@ -277,7 +277,7 @@ public class KafkaWrapper implements Closeable {
       return partitions;
     }
 
-    private List<TopicMetadata> getFilteredMetadataList(List<Pattern> blacklist, List<Pattern> whitelist) {
+    private List<TopicMetadata> getFilteredMetadataList(List<Pattern> blacklist, List<Pattern> whitelist) throws IOException{
       List<TopicMetadata> filteredTopicMetadataList = Lists.newArrayList();
 
       //Try all brokers one by one, until successfully retrieved topic metadata (topicMetadataList is non-null)
@@ -293,7 +293,7 @@ public class KafkaWrapper implements Closeable {
     }
 
     private List<TopicMetadata> fetchTopicMetadataFromBroker(String broker, List<Pattern> blacklist,
-        List<Pattern> whitelist) {
+        List<Pattern> whitelist) throws IOException{
 
       List<TopicMetadata> topicMetadataList = fetchTopicMetadataFromBroker(broker);
       if (topicMetadataList == null) {
@@ -309,7 +309,7 @@ public class KafkaWrapper implements Closeable {
       return filteredTopicMetadataList;
     }
 
-    private List<TopicMetadata> fetchTopicMetadataFromBroker(String broker, String... selectedTopics) {
+    private List<TopicMetadata> fetchTopicMetadataFromBroker(String broker, String... selectedTopics) throws IOException{
       LOG.info(String.format("Fetching topic metadata from broker %s", broker));
       SimpleConsumer consumer = null;
       try {
@@ -323,6 +323,10 @@ public class KafkaWrapper implements Closeable {
               Thread.sleep((long) ((i + Math.random()) * 1000));
             } catch (InterruptedException e2) {
               LOG.warn("Caught InterruptedException: " + e2);
+            }
+            if(i >= this.fetchTopicRetries){
+              consumer.close();
+              throw new IOException(String.format("Fetching topic metadata from broker %s has failed %d times.", broker, i + 1));
             }
           }
         }
@@ -403,7 +407,7 @@ public class KafkaWrapper implements Closeable {
 
     @Override
     protected Iterator<MessageAndOffset> fetchNextMessageBuffer(KafkaPartition partition, long nextOffset,
-        long maxOffset) {
+        long maxOffset) throws IOException{
       if (nextOffset > maxOffset) {
         return null;
       }
@@ -446,19 +450,23 @@ public class KafkaWrapper implements Closeable {
     }
 
     private Iterator<MessageAndOffset> refreshTopicMetadataAndRetryFetch(KafkaPartition partition,
-        FetchRequest fetchRequest) {
+        FetchRequest fetchRequest) throws IOException{
       try {
         refreshTopicMetadata(partition);
         FetchResponse fetchResponse = getFetchResponseForFetchRequest(fetchRequest, partition);
         return getIteratorFromFetchResponse(fetchResponse, partition);
-      } catch (Exception e) {
+      } catch(IOException ie){
+        LOG.warn(String.format("Fetch message buffer for partition %s has failed: %s. This partition will be skipped.",
+            partition, ie));
+        throw ie;
+      }catch (Exception e) {
         LOG.warn(String.format("Fetch message buffer for partition %s has failed: %s. This partition will be skipped.",
             partition, e));
         return null;
       }
     }
 
-    private void refreshTopicMetadata(KafkaPartition partition) {
+    private void refreshTopicMetadata(KafkaPartition partition) throws IOException{
       for (String broker : KafkaWrapper.this.getBrokers()) {
         List<TopicMetadata> topicMetadataList = fetchTopicMetadataFromBroker(broker, partition.getTopicName());
         if (topicMetadataList != null && !topicMetadataList.isEmpty()) {
@@ -517,7 +525,7 @@ public class KafkaWrapper implements Closeable {
     }
 
     @Override
-    public List<KafkaTopic> getFilteredTopics(List<Pattern> blacklist, List<Pattern> whitelist) {
+    public List<KafkaTopic> getFilteredTopics(List<Pattern> blacklist, List<Pattern> whitelist) throws IOException{
       throw new NotImplementedException("kafka new API has not been implemented");
     }
 
@@ -538,7 +546,7 @@ public class KafkaWrapper implements Closeable {
 
     @Override
     protected Iterator<MessageAndOffset> fetchNextMessageBuffer(KafkaPartition partition, long nextOffset,
-        long maxOffset) {
+        long maxOffset) throws IOException{
       throw new NotImplementedException("kafka new API has not been implemented");
     }
   }

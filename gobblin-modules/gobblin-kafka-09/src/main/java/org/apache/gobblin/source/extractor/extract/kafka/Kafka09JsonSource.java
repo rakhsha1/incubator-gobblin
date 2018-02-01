@@ -41,7 +41,7 @@ import org.apache.gobblin.source.workunit.WorkUnit;
  */
 public class Kafka09JsonSource extends KafkaSource<JsonArray, JsonObject> {
   @Override
-  public List<WorkUnit> getWorkunits(SourceState state) {
+  public List<WorkUnit> getWorkunits(SourceState state) throws IOException{
     if (!state.contains(Kafka09ConsumerClient.GOBBLIN_CONFIG_VALUE_DESERIALIZER_CLASS_KEY)) {
       state.setProp(Kafka09ConsumerClient.GOBBLIN_CONFIG_VALUE_DESERIALIZER_CLASS_KEY,
           KafkaGsonDeserializer.class.getName());

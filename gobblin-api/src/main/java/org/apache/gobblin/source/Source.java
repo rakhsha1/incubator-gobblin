@@ -63,7 +63,7 @@ public interface Source<S, D> {
    * @param state see {@link org.apache.gobblin.configuration.SourceState}
    * @return a list of {@link WorkUnit}s
    */
-  public abstract List<WorkUnit> getWorkunits(SourceState state);
+  public abstract List<WorkUnit> getWorkunits(SourceState state) throws IOException;
 
   /**
    * Get an {@link Extractor} based on a given {@link org.apache.gobblin.configuration.WorkUnitState}.

@@ -55,15 +55,31 @@ public class CliLocalJobLauncher implements ApplicationLauncher, JobLauncher {
     this.localJobLauncher = this.closer.register(new LocalJobLauncher(properties));
   }
 
-  public void run() throws ApplicationException, JobException, IOException {
+  public void run() {
+    int exitStatus = 0;
     try {
       start();
       launchJob(null);
+    } catch (ApplicationException | JobException e){
+      e.printStackTrace();
+      exitStatus = 1;
     } finally {
       try {
         stop();
-      } finally {
-        close();
+      } 
+      catch(ApplicationException e){
+        e.printStackTrace();
+        exitStatus = 1;
+      }
+      finally {
+        try{
+          close();  
+        }catch(IOException e){
+          e.printStackTrace();
+          exitStatus = 1;
+        }
+        
+        System.exit(exitStatus);
       }
     }
   }
