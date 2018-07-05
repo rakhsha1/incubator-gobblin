@@ -8,12 +8,16 @@ kafka.brokers=localhost:9092
 source.class=org.apache.gobblin.source.extractor.extract.kafka.KafkaSimpleSource
 extract.namespace=gobblin.extract.kafka
 
-writer.builder.class=org.apache.gobblin.writer.SimpleDataWriterBuilder
 writer.file.path.type=tablename
 writer.destination.type=HDFS
-writer.output.format=txt
+writer.output.format=PARQUET
+writer.builder.class=org.apache.gobblin.writer.ParquetDataWriterBuilder
+
 writer.staging.dir=${env:GOBBLIN_WORK_DIR}/task-staging
 writer.output.dir=${env:GOBBLIN_WORK_DIR}/task-output
+
+writer.codec.type=gzip
+#writer.file.block.size
 
 launcher.type=LOCAL
 type=java
@@ -32,12 +36,11 @@ bootstrap.with.offset=latest
 
 reset.on.offset.out.of.range=nearest
 
-topic.whitelist=test
+topic.whitelist=events
 
-simple.writer.delimiter=\n
-simple.writer.prepend.size=false
+converter.classes=org.apache.gobblin.converter.parquet.PGJsonEventConverter,org.apache.gobblin.converter.parquet.JsonIntermediateToParquetGroupConverter
 
-converter.classes=gobblin.converter.string.PGEventConverter
+source.schema="[{"columnName":"timestamp","dataType":{"type":"long"}},{"columnName":"value","dataType":{"dataType":"string"}}]"
 
 metrics.enabled=false
 metrics.host=localhost
