@@ -58,6 +58,7 @@ dependencies {
   compile externalDependency.oltu
   compile externalDependency.opencsv
   compile externalDependency.hadoopHdfs
+  compile externalDependency.esri
 
   runtime externalDependency.protobuf
 

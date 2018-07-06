@@ -880,4 +880,11 @@ public class ConfigurationKeys {
   public static final String METRICS_PORT = "metrics.port";
   public static String METRICS_ENABLED = "metrics.enabled";
 
+  /**
+   * Configuration related to PG
+   */
+  public static final String LOCATION_TOPICS = "topics.location";
+  public static final String LOCATION_PRECISION = "location.precision";
+  public static final String LOCATION_FILTER_GEOJSON = "location.filter.geojson";
+  public static final String LOCATION_FILTER_ENABLED = "location.filter.enabled";
 }
