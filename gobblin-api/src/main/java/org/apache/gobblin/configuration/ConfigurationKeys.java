@@ -887,4 +887,5 @@ public class ConfigurationKeys {
   public static final String LOCATION_PRECISION = "location.precision";
   public static final String LOCATION_FILTER_GEOJSON = "location.filter.geojson";
   public static final String LOCATION_FILTER_ENABLED = "location.filter.enabled";
+  public static final String LOCATION_FILTER_MAXMIND = "location.filter.maxmind";
 }

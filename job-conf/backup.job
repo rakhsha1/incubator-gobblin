@@ -8,23 +8,9 @@ kafka.brokers=localhost:9092
 source.class=org.apache.gobblin.source.extractor.extract.kafka.KafkaSimpleSource
 extract.namespace=gobblin.extract.kafka
 
-writer.file.path.type=tablename
-writer.destination.type=HDFS
-writer.output.format=PARQUET
-writer.builder.class=org.apache.gobblin.writer.ParquetDataWriterBuilder
-
-writer.staging.dir=${env:GOBBLIN_WORK_DIR}/task-staging
-writer.output.dir=${env:GOBBLIN_WORK_DIR}/task-output
-
-writer.codec.type=gzip
-#writer.file.block.size
-
 launcher.type=LOCAL
 type=java
 job.metrics.host=localhostclass=org.apache.gobblin.azkaban.AzkabanJobLauncher
-
-data.publisher.type=org.apache.gobblin.publisher.BaseDataPublisher
-data.publisher.final.dir=${env:GOBBLIN_WORK_DIR}/job-output
 
 mr.job.max.mappers=8
 
@@ -36,9 +22,41 @@ bootstrap.with.offset=latest
 
 reset.on.offset.out.of.range=nearest
 
-topic.whitelist=events
+topic.whitelist=events,location
 
-converter.classes=org.apache.gobblin.converter.parquet.PGJsonEventConverter,org.apache.gobblin.converter.parquet.JsonIntermediateToParquetGroupConverter
+fork.operator.class=org.apache.gobblin.fork.PGLocationBasedForkOperator
+
+#for normal fork
+converter.classes.0=org.apache.gobblin.converter.parquet.PGJsonEventConverter,org.apache.gobblin.converter.parquet.JsonIntermediateToParquetGroupConverter
+
+writer.file.path.type.0=tablename
+writer.destination.type.0=HDFS
+writer.output.format.0=PARQUET
+writer.builder.class.0=org.apache.gobblin.writer.ParquetDataWriterBuilder
+writer.staging.dir.0=${env:GOBBLIN_WORK_DIR}/task-staging
+writer.output.dir.0=${env:GOBBLIN_WORK_DIR}/task-output
+writer.codec.type.0=gzip
+
+data.publisher.type.0=org.apache.gobblin.publisher.BaseDataPublisher
+data.publisher.final.dir.0=${env:GOBBLIN_WORK_DIR}/job-output
+
+#for filtered fork
+converter.classes.1=org.apache.gobblin.converter.parquet.PGJsonEventConverter,org.apache.gobblin.converter.parquet.JsonIntermediateToParquetGroupConverter
+
+writer.file.path.type.1=tablename
+writer.destination.type.1=HDFS
+writer.output.format.1=PARQUET
+writer.builder.class.1=org.apache.gobblin.writer.ParquetDataWriterBuilder
+writer.staging.dir.1=${env:GOBBLIN_WORK_DIR}/task-staging/geo-filtered
+writer.output.dir.1=${env:GOBBLIN_WORK_DIR}/task-output/geo-filtered
+writer.codec.type.1=gzip
+
+data.publisher.type.1=org.apache.gobblin.publisher.BaseDataPublisher
+data.publisher.final.dir.1=${env:GOBBLIN_WORK_DIR}/job-output/geo-filtered
+
+topics.location=location
+location.precision=3
+location.filter.enabled=true
 
 source.schema="[{"columnName":"timestamp","dataType":{"type":"long"}},{"columnName":"value","dataType":{"dataType":"string"}}]"
 

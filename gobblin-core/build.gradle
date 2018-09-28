@@ -59,6 +59,7 @@ dependencies {
   compile externalDependency.opencsv
   compile externalDependency.hadoopHdfs
   compile externalDependency.esri
+  compile externalDependency.maxmind
 
   runtime externalDependency.protobuf
 
